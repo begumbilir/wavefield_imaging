@@ -355,7 +355,7 @@ Green_func_new = -1j/4 * besselh(0, 2, kb * Green_dist_new);
 
 %A_new = area_new * Green_func_new .* u_inc_discritized; %u_inc_discritized does not depend on number of measurements (M)
 
-G_s_new = area_new * Green_func_new;
+G_s_new = kb^2 * area_new * Green_func_new;
 
 A_new = G_s_new * diag(u_inc_vec); % u_inc_vec remains the same (independt of number of measurements)
 
@@ -430,3 +430,57 @@ axis equal tight;
 colorbar;
 title('\chi_{mn}(\rho): Minimum Norm Contrast Function From Noisy Incident Field');
 xlabel('x'); ylabel('y');
+
+%%
+
+SNR_db_all = 0:4:60; % signal-to-noise ratio in dB
+num_runs = 1000;
+
+error_runs = zeros(length(SNR_db_all), num_runs);
+error_runs_new = zeros(length(SNR_db_all), num_runs);
+for idx = 1:length(SNR_db_all)
+    SNR_db = SNR_db_all(idx);
+    fprintf('Running SNR = %d dB\n', SNR_db);
+    for run = 1:num_runs
+
+        signal_power = norm(u_sc)^2 / length(u_sc);
+        noise_power = signal_power / (10^(SNR_dB/10));
+        noise = sqrt(noise_power) * randn(size(u_sc));  % Gaussian noise
+        u_sc_noisy = u_sc + noise;
+        % Compute minimum norm solution
+        chi_vec_mn_noisy = pinv(A) * u_sc_noisy;
+        % Reshape into matrix
+        chi_mn_noisy = reshape(real(chi_vec_mn_noisy), [Nx, Ny]);
+        chi_mn_noisy = max(chi_mn_noisy, 0);
+        error = norm(chi-chi_mn_noisy, 'fro');
+        
+        % Repeat for different M
+        signal_power_new = norm(u_sc_new)^2 / length(u_sc_new);
+        noise_power_new = signal_power_new / (10^(SNR_dB/10));
+        noise_new = sqrt(noise_power_new) * randn(size(u_sc_new));  % Gaussian noise
+        u_sc_new_noisy = u_sc_new + noise_new;
+        % Compute minimum norm solution
+        chi_vec_mn_new_noisy = pinv(A_new) * u_sc_new_noisy;
+        % Reshape into matrix
+        chi_mn_new_noisy = reshape(real(chi_vec_mn_new_noisy), [Nx, Ny]);
+        chi_mn_new_noisy = max(chi_mn_new_noisy, 0);
+        error_new = norm(chi-chi_mn_new_noisy, 'fro');
+        % Store computed errors
+        error_runs(idx, run) = error;
+        error_runs_new(idx, run) = error_new;
+    end
+end
+
+mean_error = mean(error_runs, 2);         % size: [length(SNR_db_all), 1]
+mean_error_new = mean(error_runs_new, 2);
+
+% Plotting
+figure;
+plot(SNR_db_all, mean_error, '-o', 'LineWidth', 2, 'DisplayName', 'Original A');
+hold on;
+plot(SNR_db_all, mean_error_new, '-s', 'LineWidth', 2, 'DisplayName', 'Modified A');
+grid on;
+xlabel('SNR (dB)');
+ylabel('Mean Reconstruction Error (Frobenius norm)');
+title('Reconstruction Error vs. SNR');
+legend('Location', 'northeast');
