@@ -394,10 +394,10 @@ xlabel('x'); ylabel('y');
 %% STEP 20
 % Add noise
 %noise = rand(size(u_sc));
-SNR_dB = 30; % e.g., 20 dB SNR
+SNR_dB = 20; % e.g., 20 dB SNR
 signal_power = norm(u_sc)^2 / length(u_sc);
 noise_power = signal_power / (10^(SNR_dB/10));
-noise = sqrt(noise_power) * randn(size(u_sc));  % Gaussian noise
+noise = sqrt(noise_power/2) * (randn(size(u_sc))+ 1i* rand(size(u_sc)));  % Gaussian noise
 u_sc_noisy = u_sc + noise;
 
 chi_vec_mn_noisy = pinv(A) * u_sc_noisy;
@@ -416,7 +416,7 @@ xlabel('x'); ylabel('y');
 %noise_new = rand(size(u_sc_new));
 signal_power_new = norm(u_sc_new)^2 / length(u_sc_new);
 noise_power_new = signal_power_new / (10^(SNR_dB/10));
-noise_new = sqrt(noise_power_new) * randn(size(u_sc_new));  % Gaussian noise
+noise_new = sqrt(noise_power_new/2) * (randn(size(u_sc_new)) + 1i*randn(size(u_sc_new)));  % Gaussian noise
 u_sc_new_noisy = u_sc_new + noise_new;
 
 chi_vec_mn_new_noisy = pinv(A_new) * u_sc_new_noisy;
@@ -445,7 +445,7 @@ for idx = 1:length(SNR_db_all)
 
         signal_power = norm(u_sc)^2 / length(u_sc);
         noise_power = signal_power / (10^(SNR_dB/10));
-        noise = sqrt(noise_power) * randn(size(u_sc));  % Gaussian noise
+        noise = sqrt(noise_power/2) * (randn(size(u_sc))+ 1i* rand(size(u_sc)));  % Gaussian noise
         u_sc_noisy = u_sc + noise;
         % Compute minimum norm solution
         chi_vec_mn_noisy = pinv(A) * u_sc_noisy;
@@ -457,7 +457,7 @@ for idx = 1:length(SNR_db_all)
         % Repeat for different M
         signal_power_new = norm(u_sc_new)^2 / length(u_sc_new);
         noise_power_new = signal_power_new / (10^(SNR_dB/10));
-        noise_new = sqrt(noise_power_new) * randn(size(u_sc_new));  % Gaussian noise
+        noise_new = sqrt(noise_power_new/2) * (randn(size(u_sc_new)) + 1i*randn(size(u_sc_new)));  % Gaussian noise
         u_sc_new_noisy = u_sc_new + noise_new;
         % Compute minimum norm solution
         chi_vec_mn_new_noisy = pinv(A_new) * u_sc_new_noisy;
